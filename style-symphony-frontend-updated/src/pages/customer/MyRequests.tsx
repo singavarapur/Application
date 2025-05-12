@@ -37,8 +37,9 @@ const MyRequests = () => {
 
         // Fetch the user's requests
         const response = await requestService.getRequests({
-          customerId: userData.id,
+          userId: userData.user_id, 
         });
+        setRequests(response.data);
         setRequests(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);

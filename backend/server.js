@@ -926,105 +926,125 @@ app.delete("/api/merchants/:merchantId", async (req, res) => {
 // CUSTOMIZATION REQUESTS ENDPOINTS
 
 app.get("/api/customization-requests", async (req, res) => {
+  const { requestId, userId } = req.query;
+
   try {
-    const { requestId, userId, status, priority } = req.query
+    if (requestId) {
+      const requestResult = await query(
+        "SELECT * FROM customization_requests WHERE request_id = $1",
+        [requestId]
+      );
 
-    let queryText = "SELECT * FROM customization_requests"
-    const queryParams = []
-
-    if (requestId || userId || status || priority) {
-      queryText += " WHERE"
-
-      if (requestId) {
-        queryText += " request_id = $1"
-        queryParams.push(requestId)
+      if (requestResult.rowCount === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Request not found",
+        });
       }
 
-      if (userId) {
-        if (queryParams.length > 0) queryText += " AND"
-        queryText += ` user_id = $${queryParams.length + 1}`
-        queryParams.push(userId)
-      }
-
-      if (status) {
-        if (queryParams.length > 0) queryText += " AND"
-        queryText += ` status = $${queryParams.length + 1}`
-        queryParams.push(status)
-      }
-
-      if (priority) {
-        if (queryParams.length > 0) queryText += " AND"
-        queryText += ` priority = $${queryParams.length + 1}`
-        queryParams.push(priority)
-      }
-    }
-    queryText += " ORDER BY updated_at DESC"
-
-    const result = await query(queryText, queryParams)
-
-    for (const request of result.rows) {
-      const imagesQuery = "SELECT * FROM customization_request_images WHERE request_id = $1"
-      const imagesResult = await query(imagesQuery, [request.request_id])
-      request.images = imagesResult.rows
+      return res.json({
+        success: true,
+        data: requestResult.rows[0],
+      });
     }
 
-    res.json({
-      success: true,
-      message: "Customization requests retrieved successfully",
-      data: result.rows,
-    })
+    if (userId) {
+      const result = await query(
+        "SELECT * FROM customization_requests WHERE user_id = $1 ORDER BY updated_at DESC",
+        [userId]
+      );
+
+      return res.json({
+        success: true,
+        data: result.rows,
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: "Missing requestId or userId in query parameters",
+    });
   } catch (error) {
-    console.error("Error fetching customization requests:", error)
-    res.status(500).json({
+    console.error("Error fetching customization requests:", error);
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch customization requests",
-    })
+    });
   }
-})
+});
+
+
 
 // POST create a new customization request (without file upload)
 app.post("/api/customization-requests", async (req, res) => {
   try {
-    const { user_id, status = "Pending", description, design_images = [], due_date, priority = "normal" } = req.body
+    const {
+      user_id,
+      title,
+      description,
+      material,
+      budget,
+      timeframe,
+      size,
+      additionalDetails,
+      status = "Pending",
+      priority = "normal",
+    } = req.body;
 
-    if (!user_id || !description) {
+    if (
+      !user_id ||
+      !description ||
+      !title ||
+      !material ||
+      !timeframe ||
+      !size
+    ) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
-      })
-    }
-
-    if (!["Pending", "Accepted", "Completed"].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status. Must be Pending, Accepted, or Completed",
-      })
+      });
     }
 
     const queryText = `
       INSERT INTO customization_requests (
-        user_id, status, description, design_images, due_date, priority, updated_at
+        user_id, title, description, material, budget, timeframe,
+        size, additional_details, status, priority, design_images, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
       RETURNING *
-    `
+    `;
 
-    const queryParams = [user_id, status, description, design_images, due_date, priority]
-    const result = await query(queryText, queryParams)
+    const queryParams = [
+      user_id,
+      title,
+      description,
+      material,
+      budget,
+      timeframe,
+      size,
+      additionalDetails || "",
+      status,
+      priority,
+      [], // design_images empty for now
+    ];
+
+    const result = await query(queryText, queryParams);
 
     res.status(201).json({
       success: true,
       message: "Customization request created successfully",
       data: result.rows[0],
-    })
+    });
   } catch (error) {
-    console.error("Error creating customization request:", error)
+    console.error("Error creating customization request:", error);
     res.status(500).json({
       success: false,
       message: "Failed to create customization request",
-    })
+    });
   }
-})
+});
+
+
 
 // POST create a new customization request with file upload
 app.post(
@@ -1107,6 +1127,9 @@ app.post(
     }
   },
 )
+
+
+
 
 app.put("/api/customization-requests/:requestId", async (req, res) => {
   try {

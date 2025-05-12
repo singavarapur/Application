@@ -1,4 +1,5 @@
 export interface User {
+  user_id: any
   last_name: string
   first_name: string
   id: string
@@ -9,6 +10,7 @@ export interface User {
 }
 
 export interface ProjectRequest {
+  request_id: any
   id: string
   title: string
   description: string

@@ -1,10 +1,16 @@
-
-import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ProjectRequest } from '@/types';
-import { Link } from 'react-router-dom';
+import { ProjectRequest } from "@/types";
+import { Link } from "react-router-dom";
 
 interface RequestCardProps {
   request: ProjectRequest;
@@ -13,24 +19,27 @@ interface RequestCardProps {
 
 const RequestCard = ({ request, showActions = true }: RequestCardProps) => {
   const formatDate = (dateString: string) => {
+    if (!dateString || isNaN(Date.parse(dateString))) return "Unknown date";
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }).format(date);
   };
-  
+
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'assigned':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'completed':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+    switch (status.toLowerCase()) {
+      case "open":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "assigned":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "completed":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -38,9 +47,9 @@ const RequestCard = ({ request, showActions = true }: RequestCardProps) => {
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <div className="aspect-[16/9] overflow-hidden">
         {request.images && request.images.length > 0 ? (
-          <img 
-            src={request.images[0]} 
-            alt={request.title}
+          <img
+            src={request.images[0]}
+            alt={request.title || "Request Image"}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -49,48 +58,65 @@ const RequestCard = ({ request, showActions = true }: RequestCardProps) => {
           </div>
         )}
       </div>
-      
+
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-serif">{request.title}</CardTitle>
+          <CardTitle className="text-lg font-serif">
+            {request.title || "Untitled"}
+          </CardTitle>
           <Badge className={`${getStatusColor(request.status)} capitalize`}>
             {request.status}
           </Badge>
         </div>
         <CardDescription>
-          Posted on {formatDate(request.createdAt)} by {request.customerName}
+          Posted on {formatDate(request.createdAt)} by{" "}
+          {request.customerName || "Anonymous"}
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <p className="text-sm line-clamp-2 mb-2">
-          {request.description}
+          {request.description || "No description provided."}
         </p>
         <div className="flex flex-wrap gap-2 mt-3">
-          <Badge variant="outline" className="bg-fashion-purple-light text-fashion-purple-dark">
-            {request.material}
-          </Badge>
+          {request.material && (
+            <Badge
+              variant="outline"
+              className="bg-fashion-purple-light text-fashion-purple-dark"
+            >
+              {request.material}
+            </Badge>
+          )}
           {request.budget && !request.acceptedPrice && (
-            <Badge variant="outline" className="bg-fashion-purple-light text-fashion-purple-dark">
+            <Badge
+              variant="outline"
+              className="bg-fashion-purple-light text-fashion-purple-dark"
+            >
               Budget: ${request.budget}
             </Badge>
           )}
           {request.acceptedPrice && (
-            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+            <Badge
+              variant="outline"
+              className="bg-green-100 text-green-800 border-green-200"
+            >
               Price: ${request.acceptedPrice}
             </Badge>
           )}
           {request.timeframe && (
-            <Badge variant="outline" className="bg-fashion-purple-light text-fashion-purple-dark">
+            <Badge
+              variant="outline"
+              className="bg-fashion-purple-light text-fashion-purple-dark"
+            >
               {request.timeframe}
             </Badge>
           )}
         </div>
       </CardContent>
-      
+
       {showActions && (
         <CardFooter className="flex justify-between">
-          <Link to={`/requests/${request.id}`} className="w-full">
+          <Link to={`/requests/${request.request_id}`} className="w-full">
             <Button variant="outline" className="w-full">
               View Details
             </Button>

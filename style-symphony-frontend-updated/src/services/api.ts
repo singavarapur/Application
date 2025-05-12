@@ -125,35 +125,45 @@ export const userService = {
 // Request services
 export const requestService = {
   getRequests: async (filters = {}) => {
-    const queryParams = new URLSearchParams()
+    const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value as string)
-    })
+      if (value) queryParams.append(key, value as string);
+    });
 
-    const response = await api.get(`/customization-requests?${queryParams}`)
-    return response.data
+    const response = await api.get(`/customization-requests?${queryParams}`);
+    return response.data;
   },
 
   getRequestById: async (requestId: string) => {
-    const response = await api.get(`/customization-requests?requestId=${requestId}`)
-    return response.data
+    const response = await api.get(
+      `/customization-requests?requestId=${requestId}`
+    );
+    return response.data;
   },
 
   createRequest: async (requestData: any) => {
-    const response = await api.post("/customization-requests", requestData)
-    return response.data
+    const response = await api.post("/customization-requests", requestData);
+    return response.data;
+  },
+
+  getTimeline: async (requestId: string) => {
+    const response = await api.get(`/timeline/${requestId}`);
+    return response.data;
   },
 
   updateRequest: async (requestId: string, requestData: any) => {
-    const response = await api.put(`/customization-requests/${requestId}`, requestData)
-    return response.data
+    const response = await api.put(
+      `/customization-requests/${requestId}`,
+      requestData
+    );
+    return response.data;
   },
 
   deleteRequest: async (requestId: number) => {
-    const response = await api.delete(`/customization-requests/${requestId}`)
-    return response.data
+    const response = await api.delete(`/customization-requests/${requestId}`);
+    return response.data;
   },
-}
+};
 
 // Proposal services
 export const proposalService = {

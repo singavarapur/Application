@@ -33,52 +33,63 @@ const RequestDetails = () => {
     const fetchData = async () => {
       try {
         // Check authentication
-        const userData = authService.getCurrentUser()
-
+        const userData = await authService.getCurrentUser();
         if (!userData) {
-          navigate("/auth")
-          return
+          navigate("/auth");
+          return;
         }
 
-        setUser(await userData)
+        setUser(userData);
 
-        if (!id) return
+        if (!id) return;
 
         // Fetch request details
-        const requestResponse = await requestService.getRequestById(id)
-        const requestData = requestResponse.data
+        const requestResponse = await requestService.getRequestById(id);
+        const requestData = Array.isArray(requestResponse.data)
+          ? requestResponse.data[0]
+          : requestResponse.data;
 
         if (!requestData) {
           toast({
             title: "Request not found",
             description: "The requested project could not be found.",
             variant: "destructive",
-          })
-          navigate("/")
-          return
+          });
+          navigate("/");
+          return;
         }
 
-        setRequest(requestData)
+        setRequest(requestData);
 
         // Fetch proposals
-        const proposalsResponse = await proposalService.getProposals({ requestId: id })
-        setProposals(proposalsResponse.data)
+        const proposalsResponse = await proposalService.getProposals({
+          requestId: id,
+        });
+        setProposals(proposalsResponse.data);
 
-        // Fetch timeline - assuming there's an API endpoint for this
-        const timelineResponse = await fetch(`/api/timeline/${id}`)
-        const timelineData = await timelineResponse.json()
-        setTimeline(timelineData)
+        // Use customization_request_images as timeline
+        const timelineFromImages =
+          requestData.images?.map((img: any, index: number) => ({
+            id: index.toString(),
+            requestId: id,
+            status: `Update ${index + 1}`,
+            message: img.image_url,
+            createdAt: img.uploaded_at,
+          })) || [];
+
+        setTimeline(timelineFromImages);
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching data:", error);
         toast({
           title: "Error",
           description: "Failed to load request details",
           variant: "destructive",
-        })
+        });
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
+    
 
     fetchData()
   }, [id, navigate, toast])
@@ -281,23 +292,29 @@ const RequestDetails = () => {
     navigate(`/payment/${id}/${updateId}`)
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date)
-  }
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "Unknown date";
+    const date = new Date(dateString);
+    return isNaN(date.getTime())
+      ? "Unknown date"
+      : new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }).format(date);
+  };
+  
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined | null) => {
+    if (!name) return "??";
     return name
       .split(" ")
       .map((part) => part[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
+  };
+  
 
   const getStatusColor = (status: string) => {
     switch (status) {

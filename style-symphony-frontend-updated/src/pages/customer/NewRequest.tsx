@@ -55,7 +55,7 @@ const NewRequest = () => {
     material: string;
     budget?: number;
     timeframe: string;
-    images: File[];
+    images: File[]; // can be ignored for now
     additionalDetails?: string;
     size?: string;
   }) => {
@@ -71,25 +71,23 @@ const NewRequest = () => {
     setLoading(true);
 
     try {
-      const imageUrls = requestData.images.map((file) =>
-        URL.createObjectURL(file)
-      );
-
       await requestService.createRequest({
+        user_id: user.user_id,
         title: requestData.title,
         description: requestData.description,
         material: requestData.material,
         budget: requestData.budget,
         timeframe: requestData.timeframe,
-        images: imageUrls,
-        additionalDetails: requestData.additionalDetails,
+        additional_details: requestData.additionalDetails, 
         size: requestData.size,
+        status: "Pending",
+        priority: "normal",
       });
+      
 
       toast({
         title: "Request submitted successfully!",
-        description:
-          "Designers will be able to see your request and submit proposals.",
+        description: "Designers will be able to see your request.",
       });
 
       navigate("/my-requests");
@@ -104,6 +102,8 @@ const NewRequest = () => {
       setLoading(false);
     }
   };
+  
+
 
   if (!user) return null; // Wait for auth check
 
