@@ -931,8 +931,8 @@ app.get("/api/customization-requests", async (req, res) => {
   try {
     if (requestId) {
       const result = await query(
-        "SELECT * FROM customization_requests WHERE request_id = $1 and status = $2",
-        [requestId]["open"]
+        "SELECT * FROM customization_requests WHERE request_id = $1",
+        [requestId]
       );
       if (result.rowCount === 0) {
         return res
