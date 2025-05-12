@@ -926,50 +926,52 @@ app.delete("/api/merchants/:merchantId", async (req, res) => {
 // CUSTOMIZATION REQUESTS ENDPOINTS
 
 app.get("/api/customization-requests", async (req, res) => {
-  const { requestId, userId } = req.query;
+  const { requestId, userId, status } = req.query;
 
   try {
     if (requestId) {
-      const requestResult = await query(
-        "SELECT * FROM customization_requests WHERE request_id = $1",
-        [requestId]
+      const result = await query(
+        "SELECT * FROM customization_requests WHERE request_id = $1 and status = $2",
+        [requestId]["open"]
       );
-
-      if (requestResult.rowCount === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Request not found",
-        });
+      if (result.rowCount === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Request not found" });
       }
-
-      return res.json({
-        success: true,
-        data: requestResult.rows[0],
-      });
+      return res.json({ success: true, data: result.rows[0] });
     }
+
+    let queryText = "SELECT * FROM customization_requests";
+    const queryParams = [];
+    const conditions = [];
 
     if (userId) {
-      const result = await query(
-        "SELECT * FROM customization_requests WHERE user_id = $1 ORDER BY updated_at DESC",
-        [userId]
-      );
-
-      return res.json({
-        success: true,
-        data: result.rows,
-      });
+      conditions.push("user_id = $" + (queryParams.length + 1));
+      queryParams.push(userId);
     }
 
-    return res.status(400).json({
-      success: false,
-      message: "Missing requestId or userId in query parameters",
-    });
+    if (status) {
+      conditions.push("status = $" + (queryParams.length + 1));
+      queryParams.push(status);
+    }
+
+    if (conditions.length > 0) {
+      queryText += " WHERE " + conditions.join(" AND ");
+    }
+
+    queryText += " ORDER BY updated_at DESC";
+
+    const result = await query(queryText, queryParams);
+    return res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error("Error fetching customization requests:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch customization requests",
-    });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to fetch customization requests",
+      });
   }
 });
 
@@ -987,9 +989,10 @@ app.post("/api/customization-requests", async (req, res) => {
       timeframe,
       size,
       additionalDetails,
-      status = "Pending",
+      status = "open",
       priority = "normal",
     } = req.body;
+    
 
     if (
       !user_id ||
@@ -1029,6 +1032,7 @@ app.post("/api/customization-requests", async (req, res) => {
     ];
 
     const result = await query(queryText, queryParams);
+    
 
     res.status(201).json({
       success: true,
@@ -2465,7 +2469,7 @@ async function updateMerchantRating(merchantId) {
 
     await query(updateQuery, [averageRating, merchantId])
   } catch (error) {
-    console.error("Error updating merchant rating:", error)
+    console.error("Error updating merchant rating:", error)``
   }
 }
 

@@ -23,16 +23,14 @@ interface NavbarProps {
   onLogout: () => void;
 }
 
-const capitalizeRole = (role: string): "Customer" | "Designer" => {
-  return role.toLowerCase() === "customer" ? "Customer" : "Designer";
-};
-
 const Navbar = ({ user, onLogout }: NavbarProps) => {
   const getInitials = (first: string, last?: string) => {
     return `${first?.[0] || ""}${last?.[0] || ""}`.toUpperCase();
   };
 
-  const normalizedRole = user ? capitalizeRole(user.role) : null;
+  const role = user?.role?.toLowerCase();
+  const normalizedRole: "Customer" | "Designer" | null =
+    role === "customer" ? "Customer" : role === "designer" ? "Designer" : null;
 
   return (
     <nav className="border-b border-gray-200 py-4 px-6 bg-white">
@@ -51,7 +49,8 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
                 >
                   Home
                 </Link>
-                {normalizedRole === "Customer" ? (
+
+                {normalizedRole === "Customer" && (
                   <>
                     <Link
                       to="/my-requests"
@@ -66,7 +65,9 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
                       New Request
                     </Link>
                   </>
-                ) : (
+                )}
+
+                {normalizedRole === "Designer" && (
                   <>
                     <Link
                       to="/marketplace"
@@ -82,6 +83,7 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
                     </Link>
                   </>
                 )}
+
                 <Link
                   to="/messages"
                   className="text-gray-700 hover:text-fashion-purple transition-colors"
@@ -117,41 +119,50 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
                     </p>
                   </div>
                   <DropdownMenuSeparator />
+
                   <DropdownMenuItem asChild>
                     <Link to="/profile" className="cursor-pointer w-full">
                       Profile
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to={
-                        normalizedRole === "Customer"
-                          ? "/my-requests"
-                          : "/marketplace"
-                      }
-                      className="cursor-pointer w-full"
-                    >
-                      {normalizedRole === "Customer"
-                        ? "My Requests"
-                        : "Marketplace"}
-                    </Link>
-                  </DropdownMenuItem>
-                  {normalizedRole === "Designer" && (
+
+                  {normalizedRole === "Customer" && (
                     <DropdownMenuItem asChild>
-                      <Link
-                        to="/manage-orders"
-                        className="cursor-pointer w-full"
-                      >
-                        Manage Orders
+                      <Link to="/my-requests" className="cursor-pointer w-full">
+                        My Requests
                       </Link>
                     </DropdownMenuItem>
                   )}
+
+                  {normalizedRole === "Designer" && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/marketplace"
+                          className="cursor-pointer w-full"
+                        >
+                          Marketplace
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/manage-orders"
+                          className="cursor-pointer w-full"
+                        >
+                          Manage Orders
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
                   <DropdownMenuItem asChild>
                     <Link to="/messages" className="cursor-pointer w-full">
                       Messages
                     </Link>
                   </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
+
                   <DropdownMenuItem
                     onClick={onLogout}
                     className="cursor-pointer"

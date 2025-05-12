@@ -26,6 +26,7 @@ interface RequestFormProps {
     images: File[];
     additionalDetails?: string;
     size?: string;
+    status?: string; // Added status property
   }) => void;
 }
 
@@ -90,9 +91,10 @@ const RequestForm = ({ onSubmit }: RequestFormProps) => {
       timeframe,
       images,
       additionalDetails,
-      size
+      size,
+      status: "Open", 
     });
-  };
+    };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">

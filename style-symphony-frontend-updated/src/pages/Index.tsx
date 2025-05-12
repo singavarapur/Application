@@ -33,7 +33,7 @@ const Index = () => {
         }
 
         // Fetch featured requests
-        const response = await requestService.getRequests({ status: "open" })
+        const response = await requestService.getRequests();
         // Get only the first 3 open requests
         const featuredRequests = response.data.slice(0, 3)
 

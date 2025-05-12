@@ -30,26 +30,21 @@ const Marketplace = () => {
     const checkAuthAndFetchRequests = async () => {
       try {
         const userData = await authService.getCurrentUser();
-        const normalizedRole = userData?.role?.toLowerCase();
 
-        if (!userData || normalizedRole !== "designer") {
+        // Ensure valid designer role
+        if (!userData || userData.role?.toLowerCase() !== "designer") {
           navigate("/auth");
           return;
         }
 
-        // Normalize role to expected type ("Designer" | "Customer")
         const normalizedUser: User = {
           ...userData,
-          role:
-            userData.role?.toLowerCase() === "designer"
-              ? "Designer"
-              : userData.role?.toLowerCase() === "customer"
-              ? "Customer"
-              : undefined,
-        } as User;
+          role: "Designer",
+        };
         setUser(normalizedUser);
 
-        const response = await requestService.getRequests({ status: "open" });
+        const response = await requestService.getRequests(); 
+
         const openRequests = response.data;
         setRequests(openRequests);
         setFilteredRequests(openRequests);
@@ -140,7 +135,7 @@ const Marketplace = () => {
         ) : filteredRequests.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRequests.map((request) => (
-              <RequestCard key={request.id} request={request} />
+              <RequestCard key={request.request_id} request={request} />
             ))}
           </div>
         ) : (
